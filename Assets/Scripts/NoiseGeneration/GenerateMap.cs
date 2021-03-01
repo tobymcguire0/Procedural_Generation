@@ -5,7 +5,7 @@ using UnityEngine;
 public class GenerateMap : MonoBehaviour
 {
 
-    public enum DrawMode {NoiseMap, ColorMap};
+    public enum DrawMode {NoiseMap, ColorMap, Mesh};
     public DrawMode drawMode;
     public int width;
     public int height;
@@ -16,7 +16,9 @@ public class GenerateMap : MonoBehaviour
     public float lacunarity;
     public int seed;
     public Vector2 offset;
+    public float meshHeightMultiplier;
     public TerrainTypes[] regions;
+    
 
     public bool autoUpdate = true;
 
@@ -24,29 +26,32 @@ public class GenerateMap : MonoBehaviour
     {
         float[,] noiseMap = Noise.generateNoiseMap(width, height, noiseScale, octaves, persistance, lacunarity, seed, offset);
         MapDisplay display = FindObjectOfType<MapDisplay>();
-        //Just draw the heightmap if the current mode is noise, otherwise create and draw a color map corresponding to the Terrain Regions
-        if(drawMode == DrawMode.NoiseMap)
+        Color[] colorMap = new Color[width * height];
+        for (int x = 0; x < width; x++)
+        {
+            for (int y = 0; y < height; y++)
+            {
+                float currentHeight = noiseMap[x, y];
+                for (int i = 0; i < regions.Length; i++)
+                {
+                    if (currentHeight <= regions[i].height)
+                    {
+                        colorMap[y * width + x] = regions[i].color;
+                        break;
+                    }
+                }
+            }
+        }
+        //Draw the map the way the drawmode wants it to be drawn
+        if (drawMode == DrawMode.NoiseMap)
         {
             display.DrawTexture(TextureGenerator.texFromHeightMap(noiseMap,width,height));
         } else if(drawMode == DrawMode.ColorMap)
         {
-            Color[] colorMap = new Color[width * height];
-            for (int x = 0; x < width; x++)
-            {
-                for (int y = 0; y < height; y++)
-                {
-                    float currentHeight = noiseMap[x, y];
-                    for (int i = 0; i < regions.Length; i++)
-                    {
-                        if (currentHeight <= regions[i].height)
-                        {
-                            colorMap[y * width + x] = regions[i].color;
-                            break;
-                        }
-                    }
-                }
-            }
             display.DrawTexture(TextureGenerator.texFromColorMap(colorMap, width, height));
+        } else if(drawMode == DrawMode.Mesh)
+        {
+            display.DrawMesh(MeshGenerator.GenerateTerrainMesh(noiseMap,meshHeightMultiplier), TextureGenerator.texFromColorMap(colorMap, width, height));
         }
 
     }
@@ -69,6 +74,10 @@ public class GenerateMap : MonoBehaviour
         if (octaves < 0)
         {
             octaves = 0;
+        }
+        if (meshHeightMultiplier < 0)
+        {
+            meshHeightMultiplier = 0;
         }
     }
 
