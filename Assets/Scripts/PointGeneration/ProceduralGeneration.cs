@@ -4,7 +4,7 @@ using UnityEngine;
 
 public static class ProceduralGeneration
 {
-    public List<Vector2> generatePoints(float radius, Vector2 regionSize, int attemptsToPlace= 25)
+    public static List<Vector2> generatePoints(float radius, Vector2 regionSize, int attemptsToPlace= 25)
     {
         float cellSize = radius / Mathf.Sqrt(2);
 
@@ -32,7 +32,7 @@ public static class ProceduralGeneration
                 Vector2 newPoint = center + direction*Random.Range(radius, radius * 2);
 
                 //If the generated point is in a valid location, add it's information to each list
-                if (isValid(newPoint))
+                if (isValid(newPoint, grid, regionSize, cellSize, radius, points))
                 {
                     foundValidPoint = true;
                     spawnPoints.Add(newPoint);
