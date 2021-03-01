@@ -4,7 +4,7 @@ using UnityEngine;
 
 public static class MeshGenerator
 {
-    public static MeshData GenerateTerrainMesh(float[,] heightMap, float heightMultiplier, AnimationCurve heightCurve)
+    public static MeshData GenerateTerrainMesh(float[,] heightMap, float heightMultiplier, AnimationCurve heightCurve, int LOD)
     {
         int width = heightMap.GetLength(0);
         int height = heightMap.GetLength(1);
@@ -12,12 +12,15 @@ public static class MeshGenerator
         float topLeftX = (width - 1) * -0.5f;
         float topLeftZ = (height - 1) * 0.5f;
 
-        MeshData meshData = new MeshData(width, height);
+        //If the LOD is 0 then set mSI to 1, otherwise set mSI to 2*LOD
+        int meshSimplificationIncrement = (LOD ==0)?1:LOD*2;
+        int verticiesPerLine = ((width - 1) / meshSimplificationIncrement) + 1;
+        MeshData meshData = new MeshData(verticiesPerLine, verticiesPerLine);
         int vertexIndex = 0;
 
-        for(int x = 0; x<width; x++)
+        for(int x = 0; x<width; x+= meshSimplificationIncrement)
         {
-            for(int y = 0; y<height; y++)
+            for(int y = 0; y<height; y+= meshSimplificationIncrement)
             {
                 //Creating the world vertex of the current point with a height corresponding to the multiplier and heightmap
                 meshData.verticies[vertexIndex] = new Vector3(topLeftX+x, heightCurve.Evaluate(heightMap[x, y])*heightMultiplier, topLeftZ-y);
@@ -26,8 +29,8 @@ public static class MeshGenerator
                 if(x<width-1 && y < height - 1)
                 {
                     //Adding the indexes of the points that create the two triangles for that square
-                    meshData.AddTriangle(vertexIndex,vertexIndex+width+1,vertexIndex+width);
-                    meshData.AddTriangle(vertexIndex + width + 1, vertexIndex, vertexIndex + 1);
+                    meshData.AddTriangle(vertexIndex,vertexIndex+ verticiesPerLine + 1,vertexIndex+ verticiesPerLine);
+                    meshData.AddTriangle(vertexIndex + verticiesPerLine + 1, vertexIndex, vertexIndex + 1);
                 }
 
                 vertexIndex++;
