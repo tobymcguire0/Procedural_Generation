@@ -7,15 +7,21 @@ public class GenerateMap : MonoBehaviour
 
     public enum DrawMode {NoiseMap, ColorMap, Mesh};
     public DrawMode drawMode;
+
+
     public int width;
     public int height;
     public float noiseScale;
+
     public int octaves;
     [Range(0,1)]
     public float persistance;
     public float lacunarity;
+
     public int seed;
     public Vector2 offset;
+
+    public AnimationCurve meshHeightControl;
     public float meshHeightMultiplier;
     public TerrainTypes[] regions;
     
@@ -51,7 +57,7 @@ public class GenerateMap : MonoBehaviour
             display.DrawTexture(TextureGenerator.texFromColorMap(colorMap, width, height));
         } else if(drawMode == DrawMode.Mesh)
         {
-            display.DrawMesh(MeshGenerator.GenerateTerrainMesh(noiseMap,meshHeightMultiplier), TextureGenerator.texFromColorMap(colorMap, width, height));
+            display.DrawMesh(MeshGenerator.GenerateTerrainMesh(noiseMap,meshHeightMultiplier, meshHeightControl), TextureGenerator.texFromColorMap(colorMap, width, height));
         }
 
     }
