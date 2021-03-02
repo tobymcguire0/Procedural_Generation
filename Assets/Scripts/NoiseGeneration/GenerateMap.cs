@@ -18,11 +18,16 @@ public class GenerateMap : MonoBehaviour
 
     public Material terrainMaterial;
 
-    [Range(0,6)]
+    [Range(0, MeshGenerator.levelOfSupportedLOD - 1)]
     public int previewLOD;
 
+    [Range(0,MeshGenerator.numSupportedChunkSizes-1)]
+    public int chunkSizeIndex;
+    [Range(0, MeshGenerator.numSupportedFlatChunkSizes - 1)]
+    public int flatChunkSizeIndex;
 
-    
+
+
 
     Queue<MapThreadInfo<MapData>> mapDataThreadInfoQueue = new Queue<MapThreadInfo<MapData>>();
     Queue<MapThreadInfo<MeshData>> meshDataThreadInfoQueue = new Queue<MapThreadInfo<MeshData>>();
@@ -37,11 +42,11 @@ public class GenerateMap : MonoBehaviour
         {
             if (terrainData.useFlatShading)
             {
-                return 95;
+                return MeshGenerator.supportedFlatChunkSizes[flatChunkSizeIndex]-1;
             }
             else
             {
-                return 239;
+                return MeshGenerator.supportedChunkSizes[chunkSizeIndex]-1;
             }
         }
     }
