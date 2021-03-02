@@ -13,7 +13,7 @@ public class InfiniteTerrain : MonoBehaviour
     public LODInfo[] detailLevels;
     public static float maxViewDistance;
 
-    const float scale = 1;
+
 
     public static Vector2 viewerPosition;
     Vector2 viewerPositionOld;
@@ -26,7 +26,7 @@ public class InfiniteTerrain : MonoBehaviour
 
     private void Start()
     {
-        chunkSize = GenerateMap.mapChunkSize - 1;
+        chunkSize = mapGenerator.mapChunkSize - 1;
         maxViewDistance = detailLevels[detailLevels.Length - 1].visibleDistanceThreshold;
         chunksVisible = Mathf.RoundToInt(maxViewDistance / chunkSize);
         mapGenerator = FindObjectOfType<GenerateMap>();
@@ -36,7 +36,7 @@ public class InfiniteTerrain : MonoBehaviour
     private void Update()
     {
         //Constantly get the updated position of the viewer and update chunks
-        viewerPosition = new Vector2(viewer.position.x, viewer.position.z)/scale;
+        viewerPosition = new Vector2(viewer.position.x, viewer.position.z)/mapGenerator.terrainData.uniformScale;
         if ((viewerPositionOld - viewerPosition).sqrMagnitude > sqrPlayerMoveThresholdForChunkUpdate)
         {
             viewerPositionOld = viewerPosition;
@@ -113,9 +113,9 @@ public class InfiniteTerrain : MonoBehaviour
             meshFilter = meshObject.AddComponent<MeshFilter>();
             meshRenderer.material = material;
             meshCollider = meshObject.AddComponent<MeshCollider>();
-            meshObject.transform.position = posV3 * scale;
+            meshObject.transform.position = posV3 * mapGenerator.terrainData.uniformScale;
             meshObject.transform.parent = parent;
-            meshObject.transform.localScale = Vector3.one * scale;
+            meshObject.transform.localScale = Vector3.one * mapGenerator.terrainData.uniformScale;
             setVisible(false);
 
             //Initializing the different meshes for each LOD
@@ -193,9 +193,6 @@ public class InfiniteTerrain : MonoBehaviour
         {
             this.mapData = mapData;
             mapDataRecieved = true;
-
-            Texture2D texture = TextureGenerator.texFromColorMap(mapData.colorMap, GenerateMap.mapChunkSize, GenerateMap.mapChunkSize);
-            meshRenderer.material.mainTexture = texture;
 
             UpdateChunk();
         }

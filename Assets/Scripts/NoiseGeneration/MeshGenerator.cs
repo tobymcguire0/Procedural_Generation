@@ -72,7 +72,7 @@ public static class MeshGenerator
             }
         }
         //Finalizing mesh data in the thread instead of the main game thread later on
-        meshData.Finalize();
+        meshData.FinalizeMesh();
 
         //Returning the meshData instead of the Mesh to help with threading
         return meshData;
@@ -211,7 +211,7 @@ public class MeshData
         return Vector3.Cross(sideAB, sideAC).normalized;
     }
 
-    public void Finalize()
+    public void FinalizeMesh()
     {
         if (useFlatShading)
         {
