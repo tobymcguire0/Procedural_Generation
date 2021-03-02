@@ -6,6 +6,8 @@ public class UpdateableData : ScriptableObject
 {
     public event System.Action OnValuesUpdated;
     public bool autoUpdate;
+    //Only compile the code if it is in the unity editor
+    #if UNITY_EDITOR
 
     protected virtual void OnValidate()
     {
@@ -24,4 +26,5 @@ public class UpdateableData : ScriptableObject
         }
         
     }
+    #endif
 }

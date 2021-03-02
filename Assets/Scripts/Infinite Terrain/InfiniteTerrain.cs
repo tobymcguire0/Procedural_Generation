@@ -26,15 +26,17 @@ public class InfiniteTerrain : MonoBehaviour
 
     private void Start()
     {
+        mapGenerator = FindObjectOfType<GenerateMap>();
         chunkSize = mapGenerator.mapChunkSize - 1;
         maxViewDistance = detailLevels[detailLevels.Length - 1].visibleDistanceThreshold;
         chunksVisible = Mathf.RoundToInt(maxViewDistance / chunkSize);
-        mapGenerator = FindObjectOfType<GenerateMap>();
+        
         UpdateVisibleChunks();
     }
 
     private void Update()
     {
+        
         //Constantly get the updated position of the viewer and update chunks
         viewerPosition = new Vector2(viewer.position.x, viewer.position.z)/mapGenerator.terrainData.uniformScale;
         if ((viewerPositionOld - viewerPosition).sqrMagnitude > sqrPlayerMoveThresholdForChunkUpdate)
@@ -46,6 +48,7 @@ public class InfiniteTerrain : MonoBehaviour
 
     void UpdateVisibleChunks()
     {
+        Debug.Log("Updating Chunks");
         //Disable every previously viewed chunk every update
         for(int i = 0; i<chunksVisibleLastUpdate.Count; i++)
         {

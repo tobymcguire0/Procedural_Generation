@@ -46,6 +46,12 @@ public class GenerateMap : MonoBehaviour
         }
     }
 
+    private void Awake()
+    {
+        textureData.ApplyToMaterial(terrainMaterial);
+        textureData.UpdateMeshHeights(terrainMaterial, terrainData.minHeight, terrainData.maxHeight);
+    }
+
     void OnValuesUpdated()
     {
         if (!Application.isPlaying)
@@ -61,6 +67,8 @@ public class GenerateMap : MonoBehaviour
 
     public void DrawMapInEditor()
     {
+        //Updates heights in the main thread
+        textureData.UpdateMeshHeights(terrainMaterial, terrainData.minHeight, terrainData.maxHeight);
         //Calls on the MapDisplay to draw the selected type of map
         MapData mapData = GenerateMapData(Vector2.zero);
         MapDisplay display = FindObjectOfType<MapDisplay>();
@@ -160,7 +168,7 @@ public class GenerateMap : MonoBehaviour
                 }
             }
         }
-        textureData.UpdateMeshHeights(terrainMaterial, terrainData.minHeight, terrainData.maxHeight);
+        
         return new MapData(noiseMap);
 
     }
