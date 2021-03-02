@@ -10,11 +10,12 @@ public class GenerateMap : MonoBehaviour
     public enum DrawMode {NoiseMap, ColorMap, Mesh, FalloffMap};
     public DrawMode drawMode;
     public bool useFalloff;
+    public bool useFlatShading;
     float[,] falloffMap;
 
 
     public Noise.NormalizeMode normalizeMode;
-    public const int mapChunkSize = 239;
+    public const int mapChunkSize = 95;
     [Range(0,6)]
     public int previewLOD;
     public float noiseScale;
@@ -56,7 +57,7 @@ public class GenerateMap : MonoBehaviour
         }
         else if (drawMode == DrawMode.Mesh)
         {
-            display.DrawMesh(MeshGenerator.GenerateTerrainMesh(mapData.heightMap, meshHeightMultiplier, meshHeightControl, previewLOD), TextureGenerator.texFromColorMap(mapData.colorMap, mapChunkSize, mapChunkSize));
+            display.DrawMesh(MeshGenerator.GenerateTerrainMesh(mapData.heightMap, meshHeightMultiplier, meshHeightControl, previewLOD, useFlatShading), TextureGenerator.texFromColorMap(mapData.colorMap, mapChunkSize, mapChunkSize));
         } else if(drawMode == DrawMode.FalloffMap)
         {
             display.DrawTexture(TextureGenerator.texFromHeightMap(FalloffGenerator.GenerateFalloffMap(mapChunkSize),mapChunkSize,mapChunkSize));
@@ -96,7 +97,7 @@ public class GenerateMap : MonoBehaviour
 
     void MeshDataThread(MapData mapData, int lod, Action<MeshData> callback)
     {
-        MeshData meshData = MeshGenerator.GenerateTerrainMesh(mapData.heightMap,meshHeightMultiplier,meshHeightControl,lod);
+        MeshData meshData = MeshGenerator.GenerateTerrainMesh(mapData.heightMap,meshHeightMultiplier,meshHeightControl,lod, useFlatShading);
         lock (meshDataThreadInfoQueue) //Only one thread can access this line of code at a time
         {
             meshDataThreadInfoQueue.Enqueue(new MapThreadInfo<MeshData>(callback, meshData));
