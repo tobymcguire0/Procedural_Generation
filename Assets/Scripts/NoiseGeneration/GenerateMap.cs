@@ -7,10 +7,14 @@ using System.Threading;
 public class GenerateMap : MonoBehaviour
 {
 
-    public enum DrawMode {NoiseMap, ColorMap, Mesh};
+    public enum DrawMode {NoiseMap, ColorMap, Mesh, FalloffMap};
     public DrawMode drawMode;
+    public bool useFalloff;
+    float[,] falloffMap;
+
+
     public Noise.NormalizeMode normalizeMode;
-    public const int mapChunkSize = 241;
+    public const int mapChunkSize = 239;
     [Range(0,6)]
     public int previewLOD;
     public float noiseScale;
@@ -32,6 +36,11 @@ public class GenerateMap : MonoBehaviour
 
     public bool autoUpdate = true;
 
+    private void Awake()
+    {
+        falloffMap = FalloffGenerator.GenerateFalloffMap(mapChunkSize);
+    }
+
     public void DrawMapInEditor()
     {
         //Calls on the MapDisplay to draw the selected type of map
@@ -48,6 +57,9 @@ public class GenerateMap : MonoBehaviour
         else if (drawMode == DrawMode.Mesh)
         {
             display.DrawMesh(MeshGenerator.GenerateTerrainMesh(mapData.heightMap, meshHeightMultiplier, meshHeightControl, previewLOD), TextureGenerator.texFromColorMap(mapData.colorMap, mapChunkSize, mapChunkSize));
+        } else if(drawMode == DrawMode.FalloffMap)
+        {
+            display.DrawTexture(TextureGenerator.texFromHeightMap(FalloffGenerator.GenerateFalloffMap(mapChunkSize),mapChunkSize,mapChunkSize));
         }
     }
 
@@ -116,12 +128,16 @@ public class GenerateMap : MonoBehaviour
     MapData GenerateMapData(Vector2 center)
     {
         //Assigns colors for each noise value based on the regions setup in the editor
-        float[,] noiseMap = Noise.generateNoiseMap(mapChunkSize, mapChunkSize, noiseScale, octaves, persistance, lacunarity, seed, center+offset, normalizeMode);
+        float[,] noiseMap = Noise.generateNoiseMap(mapChunkSize+2, mapChunkSize+2, noiseScale, octaves, persistance, lacunarity, seed, center+offset, normalizeMode);
         Color[] colorMap = new Color[mapChunkSize * mapChunkSize];
         for (int x = 0; x < mapChunkSize; x++)
         {
             for (int y = 0; y < mapChunkSize; y++)
             {
+                if (useFalloff)
+                {
+                    noiseMap[x, y] = Mathf.Clamp01(noiseMap[x, y] - falloffMap[x, y]);
+                }
                 float currentHeight = noiseMap[x, y];
                 for (int i = 0; i < regions.Length; i++)
                 {
@@ -155,8 +171,8 @@ public class GenerateMap : MonoBehaviour
         {
             meshHeightMultiplier = 0;
         }
+        falloffMap = FalloffGenerator.GenerateFalloffMap(mapChunkSize);
 
-        
 
     }
     //Holds generic information to be sent to Update so it can be called back on the main thread instead of seperate threads
