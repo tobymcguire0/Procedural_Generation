@@ -89,6 +89,8 @@ public class InfiniteTerrain : MonoBehaviour
         MeshFilter meshFilter;
         LODInfo[] detailLevels;
         LODMesh[] detailMeshes;
+        LODMesh collisionLODMesh;
+        MeshCollider meshCollider;
 
         MapData mapData;
         bool mapDataRecieved;
@@ -110,6 +112,7 @@ public class InfiniteTerrain : MonoBehaviour
             meshRenderer = meshObject.AddComponent<MeshRenderer>();
             meshFilter = meshObject.AddComponent<MeshFilter>();
             meshRenderer.material = material;
+            meshCollider = meshObject.AddComponent<MeshCollider>();
             meshObject.transform.position = posV3 * scale;
             meshObject.transform.parent = parent;
             meshObject.transform.localScale = Vector3.one * scale;
@@ -120,6 +123,10 @@ public class InfiniteTerrain : MonoBehaviour
             for(int i = 0; i<detailLevels.Length; i++)
             {
                 detailMeshes[i] = new LODMesh(detailLevels[i].LOD, UpdateChunk);
+                if (detailLevels[i].useForCollider)
+                {
+                    collisionLODMesh = detailMeshes[i];
+                }
             }
 
             //Start a thread for getting map data
@@ -162,6 +169,15 @@ public class InfiniteTerrain : MonoBehaviour
                         else if (!lodMesh.hasRequestedMesh)
                         {
                             lodMesh.RequestMesh(mapData);
+                        }
+                    }
+                    if(lodIndex == 0)
+                    {
+                        if (collisionLODMesh.hasMesh)
+                        {
+                            meshCollider.sharedMesh = collisionLODMesh.mesh;
+                        } else if(!collisionLODMesh.hasRequestedMesh){
+                            collisionLODMesh.RequestMesh(mapData);
                         }
                     }
                     chunksVisibleLastUpdate.Add(this);
@@ -235,6 +251,7 @@ public class InfiniteTerrain : MonoBehaviour
     [System.Serializable]
     public struct LODInfo
     {
+        public bool useForCollider;
         public int LOD;
         public float visibleDistanceThreshold;
 
