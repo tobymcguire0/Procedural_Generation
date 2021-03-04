@@ -20,7 +20,7 @@ public class InfiniteTerrain : MonoBehaviour
     public static Vector2 viewerPosition;
     Vector2 viewerPositionOld;
     static GenerateMap mapGenerator;
-    int chunkSize;
+    float meshWorldSize;
     int chunksVisible;
 
     Dictionary<Vector2, TerrainChunk> chunkDictionary = new Dictionary<Vector2, TerrainChunk>();
@@ -42,9 +42,9 @@ public class InfiniteTerrain : MonoBehaviour
     private void Start()
     {
         mapGenerator = FindObjectOfType<GenerateMap>();
-        chunkSize = mapGenerator.mapChunkSize - 1;
+        meshWorldSize = mapGenerator.meshSettings.meshWorldSize;
         maxViewDistance = detailLevels[detailLevels.Length - 1].visibleDistanceThreshold;
-        chunksVisible = Mathf.RoundToInt(maxViewDistance / chunkSize);
+        chunksVisible = Mathf.RoundToInt(maxViewDistance / meshWorldSize);
         
         UpdateVisibleChunks();
     }
@@ -59,7 +59,7 @@ public class InfiniteTerrain : MonoBehaviour
             }
         }
         //Constantly get the updated position of the viewer and update chunks
-        viewerPosition = new Vector2(viewer.position.x, viewer.position.z)/mapGenerator.terrainData.uniformScale;
+        viewerPosition = new Vector2(viewer.position.x, viewer.position.z);
         if ((viewerPositionOld - viewerPosition).sqrMagnitude > sqrPlayerMoveThresholdForChunkUpdate)
         {
             viewerPositionOld = viewerPosition;
@@ -79,8 +79,8 @@ public class InfiniteTerrain : MonoBehaviour
         }
 
         //Get the position of the current chunk in terms of a chunk grid, not the unity grid
-        int currentChunkCoordX = Mathf.RoundToInt(viewerPosition.x / chunkSize);
-        int currentChunkCoordY = Mathf.RoundToInt(viewerPosition.y / chunkSize);
+        int currentChunkCoordX = Mathf.RoundToInt(viewerPosition.x / meshWorldSize);
+        int currentChunkCoordY = Mathf.RoundToInt(viewerPosition.y / meshWorldSize);
         //Looping through every chunk that has the potential to be within the view distance
         for(int xOffset = -chunksVisible; xOffset<=chunksVisible; xOffset++)
         {
@@ -100,7 +100,7 @@ public class InfiniteTerrain : MonoBehaviour
                     }
                     else //If the chunk has not been created before, create it.
                     {
-                        chunkDictionary.Add(viewedChunkCoord, new TerrainChunk(viewedChunkCoord, detailLevels, chunkSize, transform, mapMaterial, colliderLevel));
+                        chunkDictionary.Add(viewedChunkCoord, new TerrainChunk(viewedChunkCoord, detailLevels, meshWorldSize, transform, mapMaterial, colliderLevel));
                     }
                 }
                 
@@ -115,7 +115,7 @@ public class InfiniteTerrain : MonoBehaviour
     public class TerrainChunk
     {
         GameObject meshObject;
-        Vector2 pos;
+        Vector2 sampleCenter;
         Bounds bounds;
         MeshRenderer meshRenderer;
         MeshFilter meshFilter;
@@ -127,20 +127,21 @@ public class InfiniteTerrain : MonoBehaviour
         bool hasSetCollider;
         int colliderLevel;
 
-        MapData mapData;
-        bool mapDataRecieved;
+        HeightMap heightMap;
+        bool heightMapRecieved;
 
         public Vector2 coordinate;
         
 
         int prevLodIndex = -1;
 
-        public TerrainChunk(Vector2 coord, LODInfo[] detail, int size, Transform parent, Material material, int colLevel)
+        public TerrainChunk(Vector2 coord, LODInfo[] detail, float meshWorldSize, Transform parent, Material material, int colLevel)
         {
             //Initializing the position and view bounds of the chunk
-            pos = coord*size;
-            bounds = new Bounds(pos, Vector2.one * size);
-            Vector3 posV3 = new Vector3(pos.x, 0, pos.y);
+            sampleCenter = coord*meshWorldSize/mapGenerator.meshSettings.meshScale;
+            Vector2 position = coord * meshWorldSize;
+            bounds = new Bounds(sampleCenter, Vector2.one * meshWorldSize);
+            
             coordinate = coord;
 
             colliderLevel = colLevel;
@@ -155,10 +156,10 @@ public class InfiniteTerrain : MonoBehaviour
             meshFilter = meshObject.AddComponent<MeshFilter>();
             meshRenderer.material = material;
             meshCollider = meshObject.AddComponent<MeshCollider>();
-            meshObject.transform.position = posV3 * mapGenerator.terrainData.uniformScale;
+
+            meshObject.transform.position = new Vector3(position.x, 0, position.y);
             meshObject.transform.parent = parent;
-            meshObject.transform.localScale = Vector3.one * mapGenerator.terrainData.uniformScale;
-            setVisible(false);
+            SetVisible(false);
 
             //Initializing the different meshes for each LOD
             detailMeshes = new LODMesh[detailLevels.Length];
@@ -174,18 +175,18 @@ public class InfiniteTerrain : MonoBehaviour
             }
 
             //Start a thread for getting map data
-            mapGenerator.RequestMapData(pos,OnMapDataRecieved);
+            mapGenerator.RequestHeightMap(sampleCenter,OnHeightMapRecieved);
         }
 
         public void UpdateChunk()
         {
             //Make sure the chunk has map data before updating
-            if (mapDataRecieved)
+            if (heightMapRecieved)
             {
                 //Only make the chunk visible if it is within the maximum view distance
                 float viewerDstFromNearestEdge = Mathf.Sqrt(bounds.SqrDistance(viewerPosition));
 
-                bool wasVisible = isVisible();
+                bool wasVisible = IsVisible();
 
                 bool visible = viewerDstFromNearestEdge <= maxViewDistance;
 
@@ -215,7 +216,7 @@ public class InfiniteTerrain : MonoBehaviour
                         }
                         else if (!lodMesh.hasRequestedMesh)
                         {
-                            lodMesh.RequestMesh(mapData);
+                            lodMesh.RequestMesh(heightMap);
                         }
                     }
                 }
@@ -230,7 +231,7 @@ public class InfiniteTerrain : MonoBehaviour
                     }
                 }
                 //Change the visibility of the chunk
-                setVisible(visible);
+                SetVisible(visible);
             }
             
         }
@@ -244,7 +245,7 @@ public class InfiniteTerrain : MonoBehaviour
                 {
                     if (!detailMeshes[colliderLevel].hasRequestedMesh)
                     {
-                        detailMeshes[colliderLevel].RequestMesh(mapData);
+                        detailMeshes[colliderLevel].RequestMesh(heightMap);
                     }
                 }
             }
@@ -261,10 +262,10 @@ public class InfiniteTerrain : MonoBehaviour
         }
 
         //Callback when mapGenerator returns matData, updates the chunk
-        void OnMapDataRecieved(MapData mapData)
+        void OnHeightMapRecieved(HeightMap heightMap)
         {
-            this.mapData = mapData;
-            mapDataRecieved = true;
+            this.heightMap = heightMap;
+            heightMapRecieved = true;
 
             UpdateChunk();
         }
@@ -275,12 +276,12 @@ public class InfiniteTerrain : MonoBehaviour
             meshFilter.mesh = meshData.CreateMesh();
         }
 
-        public void setVisible(bool visible)
+        public void SetVisible(bool visible)
         {
             meshObject.SetActive(visible);
         }
 
-        public bool isVisible()
+        public bool IsVisible()
         {
             return meshObject.activeSelf;
         }
@@ -311,16 +312,16 @@ public class InfiniteTerrain : MonoBehaviour
         }
 
         //Requests a mesh from mapGenerator on a new thread
-        public void RequestMesh(MapData mapData)
+        public void RequestMesh(HeightMap heightMap)
         {
             hasRequestedMesh = true;
-            mapGenerator.RequestMeshData(mapData, lod,OnMeshDataRecieved);
+            mapGenerator.RequestMeshData(heightMap, lod,OnMeshDataRecieved);
         }
     }
     [System.Serializable]
     public struct LODInfo
     {
-        [Range(0, MeshGenerator.levelOfSupportedLOD - 1)]
+        [Range(0, MeshSettings.levelOfSupportedLOD - 1)]
         public int LOD;
         public float visibleDistanceThreshold;
 

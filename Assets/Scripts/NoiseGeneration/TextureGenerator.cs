@@ -15,8 +15,10 @@ public static class TextureGenerator
         return texture;
     }
     //Same as color map, but first turns the height map into a color map to be used in texFromColorMap, then does the same thing
-    public static Texture2D texFromHeightMap(float[,] heightMap, int width, int height)
+    public static Texture2D texFromHeightMap(float[,] heightMap)
     {
+        int width = heightMap.GetLength(0);
+        int height = heightMap.GetLength(1);
         Color[] colorMap = new Color[width * height];
         for (int x = 0; x < width; x++)
         {
