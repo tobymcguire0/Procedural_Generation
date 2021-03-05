@@ -12,20 +12,83 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 30106d264e4035d4f96fe8fdd5f242f7, type: 3}
   m_Name: DefaultHMS
   m_EditorClassIdentifier: 
-  autoUpdate: 0
+  autoUpdate: 1
   noiseSettings:
-    normalizeMode: 0
+    normalizeMode: 1
     scale: 50
     octaves: 6
-    persistance: 0.6
+    persistance: 0.408
     lacunarity: 2
-    seed: 0
+    seed: 33
     offset: {x: 0, y: 0}
   useFalloff: 0
   heightCurve:
     serializedVersion: 2
-    m_Curve: []
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.120582305
+      value: 0.04430321
+      inSlope: -0.024732422
+      outSlope: -0.024732422
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.13290787
+    - serializedVersion: 3
+      time: 0.31447303
+      value: 0.14989804
+      inSlope: 0.013153235
+      outSlope: 0.013153235
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.10367977
+    - serializedVersion: 3
+      time: 0.5293005
+      value: 0.2913077
+      inSlope: 0.26373777
+      outSlope: 0.26373777
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.34078735
+    - serializedVersion: 3
+      time: 0.7519685
+      value: 0.36009908
+      inSlope: 0.4080184
+      outSlope: 0.4080184
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.26735187
+    - serializedVersion: 3
+      time: 0.9272163
+      value: 0.85123587
+      inSlope: 3.3616383
+      outSlope: 3.3616383
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.24480064
+    - serializedVersion: 3
+      time: 1.0457317
+      value: 1.1816038
+      inSlope: 3.01695
+      outSlope: 3.01695
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.23600155
+      outWeight: 0
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  heightMultiplier: 0
+  heightMultiplier: 27.97

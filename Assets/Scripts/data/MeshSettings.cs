@@ -24,7 +24,7 @@ public class MeshSettings : UpdateableData
     {
         get
         {
-            return supportedChunkSizes[(useFlatShading) ? flatChunkSizeIndex : chunkSizeIndex]-1;
+            return supportedChunkSizes[(useFlatShading) ? flatChunkSizeIndex : chunkSizeIndex]+1;
         }
     }
     public float meshWorldSize
